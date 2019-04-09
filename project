@@ -12,7 +12,7 @@ int pid[MAX_PID-MIN_PID]={0};
 pthread_mutex_t p;
 struct a
 {
-	int i;
+ int i;
 }arg;
 
 void release_pid(int id){
@@ -50,7 +50,7 @@ void *tR(void *arg){
         int r=1+rand()%10;
         sleep(r);
 
-        printf("Thread [%d] PID [%d] Released after %d sec\n",tid,id+MIN_PID,r);
+        printf("Thread [%d] PID [%d] Released after %d sec \n",tid,id+MIN_PID,r);
         release_pid(id);
     }
     pthread_exit(NULL);
