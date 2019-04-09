@@ -1,0 +1,124 @@
+/********************************************************************************************
+Create a Process Id (PID) manager that keeps track of free PIDs and ensures
+that no two active processes are having the same pid. Once a process terminates
+the PID manager may assigns its pid to new process.
+Use the following constants to identify the range of possible pid values:
+#define MIN PID 100
+#define MAX PID 1000
+You may use any data structure of your choice to represent the availability
+of process identifiers. One strategy is to adopt what Linux has done and use
+a bitmap in which a value of 0 at position i indicates that a process id of
+value i is available and a value of 1 indicates that the process id is currently in use.
+Implement the following API for obtaining and releasing a pid:
+• int allocate map(void)—Creates and initializes a data structure for representing pids;
+returns—1 if unsuccessful, 1 if successful
+• int allocate pid(void)—Allocates and returns a pid; returns— 1 if unable to allocate 
+a pid (all pids are in use)
+• void release pid(int pid)—Releases a pid 
+Modify the above problem by writing a multithreaded program that tests your solution. 
+You will create a number of threads—for example, 100—and each thread will request a pid,
+sleep for a random period of time, and then release the pid. (Sleeping for a
+random period of time approximates the typical pid usage in which a pid is assigned
+to a new process, the process executes and then terminates,
+and the pid is released on the process’s termination.)
+**********************************************************************************************/
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+#include<unistd.h>
+#include<pthread.h>
+#include<string.h>
+
+
+#define MIN_PID 100
+#define MAX_PID 1000
+int pid[MAX_PID-MIN_PID]={0};
+pthread_mutex_t p;
+struct a
+{
+	int i;
+}arg;
+
+void release_pid(int id){
+    pid[id]=0;
+}
+
+int allocate_pid(void){
+    int i,flag=1;
+    for(i=0; i<MAX_PID-MIN_PID; i++){
+        if(pid[i]==0){
+        	 pthread_mutex_lock(&p);
+            pid[i]=1;
+            flag=0;
+             pthread_mutex_unlock(&p);
+            break;
+        }
+    }
+    return flag?-1:i;
+}
+
+void *tR(void *arg){
+    struct a*args = arg;
+    int tid = args->i;
+    
+    int id = allocate_pid();
+
+
+    if(id==-1){
+        printf("No PID available.");
+    }
+    else{
+    	
+        printf("Thread [%d] PID [%d] Allocated\n",tid,id+MIN_PID);
+        
+        int r=1+rand()%10;
+        sleep(r);
+
+        printf("Thread [%d] PID [%d] Released after %d sec\n",tid,id+MIN_PID,r);
+        release_pid(id);
+    }
+    pthread_exit(NULL);
+}
+
+int main(){
+    int ch=1;
+    arg.i=0;
+    int NO_OF_P;
+    pthread_mutex_init(&p,NULL);
+    
+    while(ch==1)
+    {
+    printf("\n");
+   	fflush(stdin);
+    printf("Enter the number of threads\n"); 
+    
+  	scanf("%d",&NO_OF_P);
+  	 int x=NO_OF_P;
+  	fflush(stdin);
+  	if(NO_OF_P>900||NO_OF_P<0){ 
+  	printf("ENTER VALUE LESS THAN 900 OR GREATER THAN 0\n");
+  	}
+  	
+  	
+  	else
+  	{
+    fflush(stdin);
+    pthread_t process[NO_OF_P];
+    srand(time(NULL));
+    for(arg.i=0; arg.i<NO_OF_P; arg.i++){
+        if(pthread_create(&process[arg.i],NULL,tR,&arg))
+            return -1*printf("Error in thread %d creation!!!\n",arg.i);     
+    }
+
+    for(arg.i=0; arg.i<NO_OF_P; arg.i++)
+        pthread_join(process[arg.i],NULL);
+    
+	}
+	printf("\n");
+	printf("Enter 1 to continue or press any integer to exit\n");
+	scanf("%d",&ch);
+	fflush(stdin);
+}
+    printf("\nSUCCESSFUL\n");
+	}
